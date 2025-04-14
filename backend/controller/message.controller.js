@@ -7,7 +7,7 @@ dotenv.config();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export const conversation = async (req, res) => {
-  const userId = "ckw93sk5k000101rq2f7h5gpn";
+  const userId = "cm9fkjdsn0000hrriwqzabp3y";
   if (!userId) {
     return res
       .status(400)
@@ -31,7 +31,9 @@ export const conversation = async (req, res) => {
 
 export const message = async (req, res) => {
   try {
+    console.log("🚀 ~ message ~ req.body:", req.body);
     const { conversationId, prompt } = req.body;
+    // const { prompt } = req.body;
     if (!conversationId || !prompt) {
       return res
         .status(400)
@@ -48,7 +50,7 @@ export const message = async (req, res) => {
       },
     });
 
-    const userMessage = await prismaClient.message.create({
+    await prismaClient.message.create({
       data: {
         content: prompt,
         Role: "user",
@@ -90,7 +92,7 @@ export const message = async (req, res) => {
       success: true,
       message: "Messages saved successfully",
       data: {
-        geminiReply
+        geminiReply,
       },
     });
   } catch (error) {
@@ -114,13 +116,11 @@ export const getAllMessage = async (req, res) => {
     const allMessage = await prismaClient.message.findMany({
       where: {
         conversationId: conversationId,
-      },
-      select: {
-        content: true,
+        
       },
     });
 
-    return res.status(500).json({
+    return res.status(200).json({
       success: true,
       allMessage,
     });
@@ -128,4 +128,3 @@ export const getAllMessage = async (req, res) => {
     console.log("🚀 ~ getAllMessage ~ error:", error);
   }
 };
-

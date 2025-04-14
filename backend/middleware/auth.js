@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import { prismaClient } from "../config/prismaClient.js";
 
 const isAuthenticated = async (req, res, next) => {
   try {
@@ -9,14 +10,23 @@ const isAuthenticated = async (req, res, next) => {
         success: false,
       });
     }
-    const decode = await jwt.verify(token, process.env.SECRET_KEY);
-    if (!decode) {
-      return res.status(401).json({
-        message: "Invalid Token",
+
+    const { id } = await jwt.verify(token, process.env.SECRET_KEY);
+
+    // validate user
+    const verifyUser = await prismaClient.user.findUnique({
+      where: {
+        id,
+      },
+    });
+    if (!verifyUser) {
+      res.status(400).json({
         success: false,
+        message: "User doesnot exist",
       });
     }
-    req.body.id = decode.userId;
+    req.body.id = verifyUser.id;
+
     next();
   } catch (error) {
     console.log("🚀 ~ isAuthenticated ~ error:", error);
