@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
 
@@ -13,37 +13,29 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
-
-// Menu items.
-const items = [
-  {
-    title: "Home",
-    url: "#",
-    icon: Home,
-  },
-  {
-    title: "Inbox",
-    url: "#",
-    icon: Inbox,
-  },
-  {
-    title: "Calendar",
-    url: "#",
-    icon: Calendar,
-  },
-  {
-    title: "Search",
-    url: "#",
-    icon: Search,
-  },
-  {
-    title: "Settings",
-    url: "#",
-    icon: Settings,
-  },
-];
+import axios from "axios";
+import { useSearchParams } from "next/navigation";
 
 const AppSidebar = () => {
+  const [data, setData] = useState([]);
+
+  const searchParams = useSearchParams();
+  const conversationId = searchParams.get("id");
+  useEffect(() => {
+    async function allConversation() {
+      try {
+        const res = await axios.post(
+          `${process.env.NEXT_PUBLIC_API_BASE_URL}/chat/getAllMessage`,
+          { conversationId }
+        );
+        setData(res.data.allMessage);
+      } catch (error) {
+        console.log("🚀 ~ allConversation ~ error:", error);
+      }
+    }
+    allConversation();
+  }, []);
+
   return (
     <div>
       <Sidebar>
@@ -52,16 +44,18 @@ const AppSidebar = () => {
             <SidebarGroupLabel>Application</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
-                {items.map((item) => (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <a href={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </a>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                ))}
+                {data
+                  .filter((msg) => msg.Role === "user")
+                  .map((item, index) => (
+                    <SidebarMenuItem key={index}>
+                      <SidebarMenuButton asChild>
+                        {/* <a href={item.url}> */}
+                        {/* <item.icon /> */}
+                        <span>{item.content}</span>
+                        {/* </a> */}
+                      </SidebarMenuButton>
+                    </SidebarMenuItem>
+                  ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>

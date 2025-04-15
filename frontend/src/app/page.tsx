@@ -24,18 +24,20 @@ function PlaceholdersAndVanishInputDemo() {
   const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     localStorage.setItem("question", input);
-    const res = await axios.get(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}/chat/conversation`
+    const res = await axios.post(
+      `${process.env.NEXT_PUBLIC_API_BASE_URL}/chat/conversation`,
+      { input }
     );
+    
     toast.success(res.data.message);
-    console.log("🚀 ~ onSubmit ~ res:", res.data.message);
-    router.push(`/dashboard?id=${res.data.data}`);
+    console.log("🚀 ~ onSubmit ~ res:", res.data.data.message);
+    router.push(`/dashboard?id=${res.data.data.newConversation}`);
   };
 
   return (
     <div className="h-[40rem] flex flex-col justify-center  items-center px-4">
       <h2 className="mb-10 sm:mb-20 text-xl text-center sm:text-5xl dark:text-white text-black">
-        Ask Aceternity UI Anything
+        Ask Your Dought Anytime
       </h2>
       <PlaceholdersAndVanishInput
         placeholders={placeholders}
@@ -48,8 +50,7 @@ function PlaceholdersAndVanishInputDemo() {
 
 const Page = () => {
   return (
-    <div className=" w-[100%] h-full flex items-center justify-center  ">
-      <input type="text" className="w-[20%] "   />
+    <div className=" w-full h-full flex items-center justify-center  ">
       <PlaceholdersAndVanishInputDemo />
     </div>
   );

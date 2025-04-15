@@ -7,7 +7,8 @@ dotenv.config();
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 
 export const conversation = async (req, res) => {
-  const userId = "cm9fkjdsn0000hrriwqzabp3y";
+  const userId = "cm9fkjdsn0000hrriwqzabp3z";
+  const { input } = req.body;
   if (!userId) {
     return res
       .status(400)
@@ -17,23 +18,24 @@ export const conversation = async (req, res) => {
   const newConversation = await prismaClient.conversation.create({
     data: {
       userId: userId,
+      projectTitle: input,
     },
   });
-
-  console.log("🚀 ~ conversation ~ data:", newConversation);
 
   return res.status(200).json({
     success: true,
     message: "conversation created successfully",
-    data: newConversation.id,
+    data: {
+      newConversation: newConversation.id,
+      projectTitle: newConversation.projectTitle,
+    },
   });
 };
 
 export const message = async (req, res) => {
   try {
-    console.log("🚀 ~ message ~ req.body:", req.body);
     const { conversationId, prompt } = req.body;
-    // const { prompt } = req.body;
+
     if (!conversationId || !prompt) {
       return res
         .status(400)
@@ -91,13 +93,11 @@ export const message = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Messages saved successfully",
-      data: {
-        geminiReply,
-      },
+      data: geminiReply,
     });
   } catch (error) {
     console.log("🚀 ~ message ~ error:", error);
-    return res.status(500).json({
+    return res.status(400).json({
       success: false,
       message: "Something went wrong while processing the message",
     });
@@ -116,7 +116,6 @@ export const getAllMessage = async (req, res) => {
     const allMessage = await prismaClient.message.findMany({
       where: {
         conversationId: conversationId,
-        
       },
     });
 
@@ -126,5 +125,35 @@ export const getAllMessage = async (req, res) => {
     });
   } catch (error) {
     console.log("🚀 ~ getAllMessage ~ error:", error);
+  }
+};
+
+export const getAllProjectTitle = async (req, res) => {
+  try {
+    const { conversationId } = req.body;
+    if (!conversationId) {
+      return res
+        .status(400)
+        .json({ success: false, message: "invalid conversation id" });
+    }
+    const data = await prismaClient.conversation.findMany({
+      where: {
+        userId: conversationId,
+      },
+      select: {
+        projectTitle: true,
+      },
+    });
+    console.log("🚀 ~ getAllProjectTitle ~ data:", data);
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    console.log("🚀 ~ getAllProjectTitle ~ error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Something went wrong",
+    });
   }
 };
